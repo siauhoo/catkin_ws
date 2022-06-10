@@ -40,7 +40,7 @@ template<>
 struct MD5Sum< ::conv::conv > {
   static const char* value()
   {
-    return "8a5391416c94b934abefe3529f6e4d67";
+    return "fd95d1cd8607c017d163c5f38defaa91";
   }
 
   static const char* value(const ::conv::conv&) { return value(); }

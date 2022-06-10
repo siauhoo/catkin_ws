@@ -1,5 +1,7 @@
 (cl:in-package conv-srv)
-(cl:export '(SRCMATRIX_A_ROWNUM-VAL
+(cl:export '(VERSION-VAL
+          VERSION
+          SRCMATRIX_A_ROWNUM-VAL
           SRCMATRIX_A_ROWNUM
           SRCMATRIX_A_COLNUM-VAL
           SRCMATRIX_A_COLNUM

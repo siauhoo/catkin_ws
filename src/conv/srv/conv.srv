@@ -1,3 +1,4 @@
+int32 version
 int32 srcmatrix_A_rownum
 int32 srcmatrix_A_colnum
 int8[] srcmatrix_A

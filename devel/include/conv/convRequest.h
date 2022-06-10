@@ -24,7 +24,8 @@ struct convRequest_
   typedef convRequest_<ContainerAllocator> Type;
 
   convRequest_()
-    : srcmatrix_A_rownum(0)
+    : version(0)
+    , srcmatrix_A_rownum(0)
     , srcmatrix_A_colnum(0)
     , srcmatrix_A()
     , srcmatrix_B_rownum(0)
@@ -32,7 +33,8 @@ struct convRequest_
     , srcmatrix_B()  {
     }
   convRequest_(const ContainerAllocator& _alloc)
-    : srcmatrix_A_rownum(0)
+    : version(0)
+    , srcmatrix_A_rownum(0)
     , srcmatrix_A_colnum(0)
     , srcmatrix_A(_alloc)
     , srcmatrix_B_rownum(0)
@@ -42,6 +44,9 @@ struct convRequest_
     }
 
 
+
+   typedef int32_t _version_type;
+  _version_type version;
 
    typedef int32_t _srcmatrix_A_rownum_type;
   _srcmatrix_A_rownum_type srcmatrix_A_rownum;
@@ -90,7 +95,8 @@ return s;
 template<typename ContainerAllocator1, typename ContainerAllocator2>
 bool operator==(const ::conv::convRequest_<ContainerAllocator1> & lhs, const ::conv::convRequest_<ContainerAllocator2> & rhs)
 {
-  return lhs.srcmatrix_A_rownum == rhs.srcmatrix_A_rownum &&
+  return lhs.version == rhs.version &&
+    lhs.srcmatrix_A_rownum == rhs.srcmatrix_A_rownum &&
     lhs.srcmatrix_A_colnum == rhs.srcmatrix_A_colnum &&
     lhs.srcmatrix_A == rhs.srcmatrix_A &&
     lhs.srcmatrix_B_rownum == rhs.srcmatrix_B_rownum &&
@@ -152,12 +158,12 @@ struct MD5Sum< ::conv::convRequest_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "b69413d1c5fc23dea379049f7250e8aa";
+    return "c16fba7db0d56713128e060c9f0905bd";
   }
 
   static const char* value(const ::conv::convRequest_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xb69413d1c5fc23deULL;
-  static const uint64_t static_value2 = 0xa379049f7250e8aaULL;
+  static const uint64_t static_value1 = 0xc16fba7db0d56713ULL;
+  static const uint64_t static_value2 = 0x128e060c9f0905bdULL;
 };
 
 template<class ContainerAllocator>
@@ -176,7 +182,8 @@ struct Definition< ::conv::convRequest_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "int32 srcmatrix_A_rownum\n"
+    return "int32 version\n"
+"int32 srcmatrix_A_rownum\n"
 "int32 srcmatrix_A_colnum\n"
 "int8[] srcmatrix_A\n"
 "int32 srcmatrix_B_rownum\n"
@@ -200,6 +207,7 @@ namespace serialization
   {
     template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
     {
+      stream.next(m.version);
       stream.next(m.srcmatrix_A_rownum);
       stream.next(m.srcmatrix_A_colnum);
       stream.next(m.srcmatrix_A);
@@ -224,6 +232,8 @@ struct Printer< ::conv::convRequest_<ContainerAllocator> >
 {
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::conv::convRequest_<ContainerAllocator>& v)
   {
+    s << indent << "version: ";
+    Printer<int32_t>::stream(s, indent + "  ", v.version);
     s << indent << "srcmatrix_A_rownum: ";
     Printer<int32_t>::stream(s, indent + "  ", v.srcmatrix_A_rownum);
     s << indent << "srcmatrix_A_colnum: ";

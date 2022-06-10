@@ -7,7 +7,12 @@
 ;//! \htmlinclude conv-request.msg.html
 
 (cl:defclass <conv-request> (roslisp-msg-protocol:ros-message)
-  ((srcmatrix_A_rownum
+  ((version
+    :reader version
+    :initarg :version
+    :type cl:integer
+    :initform 0)
+   (srcmatrix_A_rownum
     :reader srcmatrix_A_rownum
     :initarg :srcmatrix_A_rownum
     :type cl:integer
@@ -47,6 +52,11 @@
   (cl:unless (cl:typep m 'conv-request)
     (roslisp-msg-protocol:msg-deprecation-warning "using old message class name conv-srv:<conv-request> is deprecated: use conv-srv:conv-request instead.")))
 
+(cl:ensure-generic-function 'version-val :lambda-list '(m))
+(cl:defmethod version-val ((m <conv-request>))
+  (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader conv-srv:version-val is deprecated.  Use conv-srv:version instead.")
+  (version m))
+
 (cl:ensure-generic-function 'srcmatrix_A_rownum-val :lambda-list '(m))
 (cl:defmethod srcmatrix_A_rownum-val ((m <conv-request>))
   (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader conv-srv:srcmatrix_A_rownum-val is deprecated.  Use conv-srv:srcmatrix_A_rownum instead.")
@@ -78,6 +88,12 @@
   (srcmatrix_B m))
 (cl:defmethod roslisp-msg-protocol:serialize ((msg <conv-request>) ostream)
   "Serializes a message object of type '<conv-request>"
+  (cl:let* ((signed (cl:slot-value msg 'version)) (unsigned (cl:if (cl:< signed 0) (cl:+ signed 4294967296) signed)))
+    (cl:write-byte (cl:ldb (cl:byte 8 0) unsigned) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 8) unsigned) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 16) unsigned) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 24) unsigned) ostream)
+    )
   (cl:let* ((signed (cl:slot-value msg 'srcmatrix_A_rownum)) (unsigned (cl:if (cl:< signed 0) (cl:+ signed 4294967296) signed)))
     (cl:write-byte (cl:ldb (cl:byte 8 0) unsigned) ostream)
     (cl:write-byte (cl:ldb (cl:byte 8 8) unsigned) ostream)
@@ -121,6 +137,12 @@
 )
 (cl:defmethod roslisp-msg-protocol:deserialize ((msg <conv-request>) istream)
   "Deserializes a message object of type '<conv-request>"
+    (cl:let ((unsigned 0))
+      (cl:setf (cl:ldb (cl:byte 8 0) unsigned) (cl:read-byte istream))
+      (cl:setf (cl:ldb (cl:byte 8 8) unsigned) (cl:read-byte istream))
+      (cl:setf (cl:ldb (cl:byte 8 16) unsigned) (cl:read-byte istream))
+      (cl:setf (cl:ldb (cl:byte 8 24) unsigned) (cl:read-byte istream))
+      (cl:setf (cl:slot-value msg 'version) (cl:if (cl:< unsigned 2147483648) unsigned (cl:- unsigned 4294967296))))
     (cl:let ((unsigned 0))
       (cl:setf (cl:ldb (cl:byte 8 0) unsigned) (cl:read-byte istream))
       (cl:setf (cl:ldb (cl:byte 8 8) unsigned) (cl:read-byte istream))
@@ -175,18 +197,19 @@
   "conv/convRequest")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql '<conv-request>)))
   "Returns md5sum for a message object of type '<conv-request>"
-  "8a5391416c94b934abefe3529f6e4d67")
+  "fd95d1cd8607c017d163c5f38defaa91")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql 'conv-request)))
   "Returns md5sum for a message object of type 'conv-request"
-  "8a5391416c94b934abefe3529f6e4d67")
+  "fd95d1cd8607c017d163c5f38defaa91")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<conv-request>)))
   "Returns full string definition for message of type '<conv-request>"
-  (cl:format cl:nil "int32 srcmatrix_A_rownum~%int32 srcmatrix_A_colnum~%int8[] srcmatrix_A~%int32 srcmatrix_B_rownum~%int32 srcmatrix_B_colnum~%uint8[] srcmatrix_B~%~%~%"))
+  (cl:format cl:nil "int32 version~%int32 srcmatrix_A_rownum~%int32 srcmatrix_A_colnum~%int8[] srcmatrix_A~%int32 srcmatrix_B_rownum~%int32 srcmatrix_B_colnum~%uint8[] srcmatrix_B~%~%~%"))
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql 'conv-request)))
   "Returns full string definition for message of type 'conv-request"
-  (cl:format cl:nil "int32 srcmatrix_A_rownum~%int32 srcmatrix_A_colnum~%int8[] srcmatrix_A~%int32 srcmatrix_B_rownum~%int32 srcmatrix_B_colnum~%uint8[] srcmatrix_B~%~%~%"))
+  (cl:format cl:nil "int32 version~%int32 srcmatrix_A_rownum~%int32 srcmatrix_A_colnum~%int8[] srcmatrix_A~%int32 srcmatrix_B_rownum~%int32 srcmatrix_B_colnum~%uint8[] srcmatrix_B~%~%~%"))
 (cl:defmethod roslisp-msg-protocol:serialization-length ((msg <conv-request>))
   (cl:+ 0
+     4
      4
      4
      4 (cl:reduce #'cl:+ (cl:slot-value msg 'srcmatrix_A) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ 1)))
@@ -197,6 +220,7 @@
 (cl:defmethod roslisp-msg-protocol:ros-message-to-list ((msg <conv-request>))
   "Converts a ROS message object to a list"
   (cl:list 'conv-request
+    (cl:cons ':version (version msg))
     (cl:cons ':srcmatrix_A_rownum (srcmatrix_A_rownum msg))
     (cl:cons ':srcmatrix_A_colnum (srcmatrix_A_colnum msg))
     (cl:cons ':srcmatrix_A (srcmatrix_A msg))
@@ -257,10 +281,10 @@
   "conv/convResponse")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql '<conv-response>)))
   "Returns md5sum for a message object of type '<conv-response>"
-  "8a5391416c94b934abefe3529f6e4d67")
+  "fd95d1cd8607c017d163c5f38defaa91")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql 'conv-response)))
   "Returns md5sum for a message object of type 'conv-response"
-  "8a5391416c94b934abefe3529f6e4d67")
+  "fd95d1cd8607c017d163c5f38defaa91")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<conv-response>)))
   "Returns full string definition for message of type '<conv-response>"
   (cl:format cl:nil "uint8[] result~%~%~%"))

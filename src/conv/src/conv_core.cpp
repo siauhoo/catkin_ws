@@ -65,31 +65,74 @@ void Relu6(std::vector<int32>& src,int count, std::vector<uint8>& target) {
 	}
 }
 
-bool call_back(conv::conv::Request&req,conv::conv::Response &res)
-{
-	cout<<"begin call_back" << endl;
 
+void mmul_sw(conv::conv::Request&req,conv::conv::Response &res) {
 	int32 srcmatrix_A_rownum = req.srcmatrix_A_rownum;
 	int32 srcmatrix_B_colnum = req.srcmatrix_B_colnum;
 	vector<int32> array ;
 	array.resize(srcmatrix_A_rownum*srcmatrix_B_colnum);
 
  
- 	ShowMatrix(req.srcmatrix_A_rownum,req.srcmatrix_A_colnum,req.srcmatrix_A);
- 	ShowMatrix(req.srcmatrix_B_rownum,req.srcmatrix_B_colnum,req.srcmatrix_B);
+ 	//ShowMatrix(req.srcmatrix_A_rownum,req.srcmatrix_A_colnum,req.srcmatrix_A);
+ 	//ShowMatrix(req.srcmatrix_B_rownum,req.srcmatrix_B_colnum,req.srcmatrix_B);
 
 	MultMatrix(req.srcmatrix_A_rownum,req.srcmatrix_A_colnum,req.srcmatrix_A,
 		req.srcmatrix_B_rownum,req.srcmatrix_B_colnum,req.srcmatrix_B,array);
 
 
- 	ShowMatrix(srcmatrix_A_rownum,srcmatrix_B_colnum,array);
+ 	//ShowMatrix(srcmatrix_A_rownum,srcmatrix_B_colnum,array);
 
 
 	res.result.resize(srcmatrix_A_rownum*srcmatrix_B_colnum);
 	Relu6(array,srcmatrix_A_rownum*srcmatrix_B_colnum,res.result);
-	
-	ShowMatrix(srcmatrix_A_rownum,srcmatrix_B_colnum,res.result);
+}
 
+
+#define XACC_BASE 0x40000000
+struct xacc {
+	volatile uint32_t* ptr;
+};
+
+void xacc_init(struct xacc* acc) {
+	int fd = open("/dev/mem", O_RDWR | O_SYNC);
+	void* addr = mmap(0,4096,PROT_READ | PROT_WRITE,MAP_SHARED,fd,XACC_BASE);
+	acc->ptr = (volatile uint32_t*)addr;
+	close(fd);
+}
+
+void xacc_comp(struct xacc* acc, uint32_t a, uint32_t b, uint32_t *c) 
+{
+	acc->ptr[6] = a;
+	acc->ptr[8] = b;
+	acc->ptr[0] = 0x01 | (acc->ptr[0] & 0x80);
+	while (!(acc->ptr[0] & 0x02)) {
+		usleep(50);
+	}
+	*c = acc->ptr[4];
+}
+
+
+void mmul_hw(conv::conv::Request&req,conv::conv::Response &res) {
+	cout <<"mmul_hw" << endl;
+}
+
+bool call_back(conv::conv::Request&req,conv::conv::Response &res)
+{
+	cout<<"begin call_back" << endl;
+	switch (req.version)
+	{
+        case 0 :
+            mmul_sw(req,res);
+            break;
+        case 1 :
+            cout << "You entered B. \n";
+            break;
+        default:
+            cout << "unknow version!\n";
+            return false;
+  }
+	
+	//ShowMatrix(srcmatrix_A_rownum,srcmatrix_B_colnum,res.result);
 
   return true;
 }

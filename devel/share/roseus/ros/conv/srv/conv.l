@@ -20,11 +20,12 @@
 
 (defclass conv::convRequest
   :super ros::object
-  :slots (_srcmatrix_A_rownum _srcmatrix_A_colnum _srcmatrix_A _srcmatrix_B_rownum _srcmatrix_B_colnum _srcmatrix_B ))
+  :slots (_version _srcmatrix_A_rownum _srcmatrix_A_colnum _srcmatrix_A _srcmatrix_B_rownum _srcmatrix_B_colnum _srcmatrix_B ))
 
 (defmethod conv::convRequest
   (:init
    (&key
+    ((:version __version) 0)
     ((:srcmatrix_A_rownum __srcmatrix_A_rownum) 0)
     ((:srcmatrix_A_colnum __srcmatrix_A_colnum) 0)
     ((:srcmatrix_A __srcmatrix_A) (make-array 0 :initial-element 0 :element-type :integer))
@@ -33,6 +34,7 @@
     ((:srcmatrix_B __srcmatrix_B) (make-array 0 :initial-element 0 :element-type :char))
     )
    (send-super :init)
+   (setq _version (round __version))
    (setq _srcmatrix_A_rownum (round __srcmatrix_A_rownum))
    (setq _srcmatrix_A_colnum (round __srcmatrix_A_colnum))
    (setq _srcmatrix_A __srcmatrix_A)
@@ -40,6 +42,9 @@
    (setq _srcmatrix_B_colnum (round __srcmatrix_B_colnum))
    (setq _srcmatrix_B __srcmatrix_B)
    self)
+  (:version
+   (&optional __version)
+   (if __version (setq _version __version)) _version)
   (:srcmatrix_A_rownum
    (&optional __srcmatrix_A_rownum)
    (if __srcmatrix_A_rownum (setq _srcmatrix_A_rownum __srcmatrix_A_rownum)) _srcmatrix_A_rownum)
@@ -61,6 +66,8 @@
   (:serialization-length
    ()
    (+
+    ;; int32 _version
+    4
     ;; int32 _srcmatrix_A_rownum
     4
     ;; int32 _srcmatrix_A_colnum
@@ -78,6 +85,8 @@
    (&optional strm)
    (let ((s (if strm strm
               (make-string-output-stream (send self :serialization-length)))))
+     ;; int32 _version
+       (write-long _version s)
      ;; int32 _srcmatrix_A_rownum
        (write-long _srcmatrix_A_rownum s)
      ;; int32 _srcmatrix_A_colnum
@@ -98,6 +107,8 @@
      (if (null strm) (get-output-stream-string s))))
   (:deserialize
    (buf &optional (ptr- 0))
+   ;; int32 _version
+     (setq _version (sys::peek buf ptr- :integer)) (incf ptr- 4)
    ;; int32 _srcmatrix_A_rownum
      (setq _srcmatrix_A_rownum (sys::peek buf ptr- :integer)) (incf ptr- 4)
    ;; int32 _srcmatrix_A_colnum
@@ -166,7 +177,7 @@
   :super ros::object
   :slots ())
 
-(setf (get conv::conv :md5sum-) "8a5391416c94b934abefe3529f6e4d67")
+(setf (get conv::conv :md5sum-) "fd95d1cd8607c017d163c5f38defaa91")
 (setf (get conv::conv :datatype-) "conv/conv")
 (setf (get conv::conv :request) conv::convRequest)
 (setf (get conv::conv :response) conv::convResponse)
@@ -174,10 +185,11 @@
 (defmethod conv::convRequest
   (:response () (instance conv::convResponse :init)))
 
-(setf (get conv::convRequest :md5sum-) "8a5391416c94b934abefe3529f6e4d67")
+(setf (get conv::convRequest :md5sum-) "fd95d1cd8607c017d163c5f38defaa91")
 (setf (get conv::convRequest :datatype-) "conv/convRequest")
 (setf (get conv::convRequest :definition-)
-      "int32 srcmatrix_A_rownum
+      "int32 version
+int32 srcmatrix_A_rownum
 int32 srcmatrix_A_colnum
 int8[] srcmatrix_A
 int32 srcmatrix_B_rownum
@@ -187,10 +199,11 @@ uint8[] srcmatrix_B
 uint8[] result
 ")
 
-(setf (get conv::convResponse :md5sum-) "8a5391416c94b934abefe3529f6e4d67")
+(setf (get conv::convResponse :md5sum-) "fd95d1cd8607c017d163c5f38defaa91")
 (setf (get conv::convResponse :datatype-) "conv/convResponse")
 (setf (get conv::convResponse :definition-)
-      "int32 srcmatrix_A_rownum
+      "int32 version
+int32 srcmatrix_A_rownum
 int32 srcmatrix_A_colnum
 int8[] srcmatrix_A
 int32 srcmatrix_B_rownum
@@ -202,6 +215,6 @@ uint8[] result
 
 
 
-(provide :conv/conv "8a5391416c94b934abefe3529f6e4d67")
+(provide :conv/conv "fd95d1cd8607c017d163c5f38defaa91")
 
 

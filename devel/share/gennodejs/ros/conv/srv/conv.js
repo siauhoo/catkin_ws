@@ -21,6 +21,7 @@ class convRequest {
   constructor(initObj={}) {
     if (initObj === null) {
       // initObj === null is a special case for deserialization where we don't initialize fields
+      this.version = null;
       this.srcmatrix_A_rownum = null;
       this.srcmatrix_A_colnum = null;
       this.srcmatrix_A = null;
@@ -29,6 +30,12 @@ class convRequest {
       this.srcmatrix_B = null;
     }
     else {
+      if (initObj.hasOwnProperty('version')) {
+        this.version = initObj.version
+      }
+      else {
+        this.version = 0;
+      }
       if (initObj.hasOwnProperty('srcmatrix_A_rownum')) {
         this.srcmatrix_A_rownum = initObj.srcmatrix_A_rownum
       }
@@ -70,6 +77,8 @@ class convRequest {
 
   static serialize(obj, buffer, bufferOffset) {
     // Serializes a message object of type convRequest
+    // Serialize message field [version]
+    bufferOffset = _serializer.int32(obj.version, buffer, bufferOffset);
     // Serialize message field [srcmatrix_A_rownum]
     bufferOffset = _serializer.int32(obj.srcmatrix_A_rownum, buffer, bufferOffset);
     // Serialize message field [srcmatrix_A_colnum]
@@ -89,6 +98,8 @@ class convRequest {
     //deserializes a message object of type convRequest
     let len;
     let data = new convRequest(null);
+    // Deserialize message field [version]
+    data.version = _deserializer.int32(buffer, bufferOffset);
     // Deserialize message field [srcmatrix_A_rownum]
     data.srcmatrix_A_rownum = _deserializer.int32(buffer, bufferOffset);
     // Deserialize message field [srcmatrix_A_colnum]
@@ -108,7 +119,7 @@ class convRequest {
     let length = 0;
     length += object.srcmatrix_A.length;
     length += object.srcmatrix_B.length;
-    return length + 24;
+    return length + 28;
   }
 
   static datatype() {
@@ -118,12 +129,13 @@ class convRequest {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return 'b69413d1c5fc23dea379049f7250e8aa';
+    return 'c16fba7db0d56713128e060c9f0905bd';
   }
 
   static messageDefinition() {
     // Returns full string definition for message
     return `
+    int32 version
     int32 srcmatrix_A_rownum
     int32 srcmatrix_A_colnum
     int8[] srcmatrix_A
@@ -140,6 +152,13 @@ class convRequest {
       msg = {};
     }
     const resolved = new convRequest(null);
+    if (msg.version !== undefined) {
+      resolved.version = msg.version;
+    }
+    else {
+      resolved.version = 0
+    }
+
     if (msg.srcmatrix_A_rownum !== undefined) {
       resolved.srcmatrix_A_rownum = msg.srcmatrix_A_rownum;
     }
@@ -262,6 +281,6 @@ class convResponse {
 module.exports = {
   Request: convRequest,
   Response: convResponse,
-  md5sum() { return '8a5391416c94b934abefe3529f6e4d67'; },
+  md5sum() { return 'fd95d1cd8607c017d163c5f38defaa91'; },
   datatype() { return 'conv/conv'; }
 };
