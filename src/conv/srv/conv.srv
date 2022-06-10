@@ -1,0 +1,8 @@
+int32 srcmatrix_A_rownum
+int32 srcmatrix_A_colnum
+int8[] srcmatrix_A
+int32 srcmatrix_B_rownum
+int32 srcmatrix_B_colnum
+uint8[] srcmatrix_B
+---
+uint8[] result

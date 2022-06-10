@@ -1,0 +1,8 @@
+prefix=/home/siauhoo/catkin_ws/install
+
+Name: conv
+Description: Description of conv
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib 
+Requires: 
