@@ -17,6 +17,7 @@
 #include <iostream>
 #include <string>
 #include <cstdlib>
+#include <exception>
 
 typedef int int32;
 typedef int8_t int8;
@@ -98,7 +99,6 @@ void mmul_sw(conv::conv::Request&req,conv::conv::Response &res) {
  	//ShowMatrix(srcmatrix_A_rownum,srcmatrix_B_colnum,array);
 
 
-	res.result.resize(srcmatrix_A_rownum*srcmatrix_B_colnum);
 	Relu6(array,srcmatrix_A_rownum*srcmatrix_B_colnum,res.result);
 }
 
@@ -186,20 +186,24 @@ void mmul_hw(conv::conv::Request&req,conv::conv::Response &res) {
 
 bool call_back(conv::conv::Request&req,conv::conv::Response &res)
 {
-	cout<<"begin call_back" << endl;
-	switch (req.version)
-	{
-        case 0 :
-            mmul_sw(req,res);
-            break;
-        case 1 :
-        		mmul_hw(req,res);
-            break;
-        default:
-            cout << "unknow version!\n";
-            return false;
-  }
-	
+	try { 
+			cout<<"begin call_back" << endl;
+			switch (req.version)
+			{
+		        case 0 :
+		            mmul_sw(req,res);
+		            break;
+		        case 1 :
+		        		mmul_hw(req,res);
+		            break;
+		        default:
+		            cout << "unknow version!\n";
+		  }
+	} catch(std::exception& e) {
+		std::cout << "Exception caught" << std::endl;
+    std::cout << e.what() << std::endl;
+    return false;
+	}
 	//ShowMatrix(srcmatrix_A_rownum,srcmatrix_B_colnum,res.result);
 
   return true;

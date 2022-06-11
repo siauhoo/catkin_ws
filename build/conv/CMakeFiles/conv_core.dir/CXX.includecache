@@ -103,6 +103,8 @@ string
 -
 cstdlib
 -
+exception
+-
 
 /opt/ros/noetic/include/ros/advertise_options.h
 ros/forwards.h
