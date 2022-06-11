@@ -89,16 +89,17 @@ void mmul_sw(conv::conv::Request&req,conv::conv::Response &res) {
 	array.resize(srcmatrix_A_rownum*srcmatrix_B_colnum);
 
  
- 	//ShowMatrix(req.srcmatrix_A_rownum,req.srcmatrix_A_colnum,req.srcmatrix_A);
- 	//ShowMatrix(req.srcmatrix_B_rownum,req.srcmatrix_B_colnum,req.srcmatrix_B);
+ 	ShowMatrix(req.srcmatrix_A_rownum,req.srcmatrix_A_colnum,req.srcmatrix_A);
+ 	ShowMatrix(req.srcmatrix_B_rownum,req.srcmatrix_B_colnum,req.srcmatrix_B);
 
 	MultMatrix(req.srcmatrix_A_rownum,req.srcmatrix_A_colnum,req.srcmatrix_A,
 		req.srcmatrix_B_rownum,req.srcmatrix_B_colnum,req.srcmatrix_B,array);
 
 
- 	//ShowMatrix(srcmatrix_A_rownum,srcmatrix_B_colnum,array);
+ 	ShowMatrix(srcmatrix_A_rownum,srcmatrix_B_colnum,array);
 
 
+  res.result.resize(srcmatrix_A_rownum*srcmatrix_B_colnum);
 	Relu6(array,srcmatrix_A_rownum*srcmatrix_B_colnum,res.result);
 }
 
@@ -171,9 +172,7 @@ void xacc_comp(struct xacc* acc,conv::conv::Request&req,conv::conv::Response &re
 		usleep(50);
 	}
 
-	int32 srcmatrix_A_rownum = req.srcmatrix_A_rownum;
-	int32 srcmatrix_B_colnum = req.srcmatrix_B_colnum;
-	res.result.resize(srcmatrix_A_rownum*srcmatrix_B_colnum);
+  res.result.resize(req.srcmatrix_A_rownum*req.srcmatrix_B_colnum);
 	XAcc_mmult_Read_O_Bytes(XACC_BASE,0,reinterpret_cast<char*>(&res.result[0]),XACC_MMULT_CONTROL_DEPTH_O);
 }
 
@@ -204,7 +203,7 @@ bool call_back(conv::conv::Request&req,conv::conv::Response &res)
     std::cout << e.what() << std::endl;
     return false;
 	}
-	//ShowMatrix(srcmatrix_A_rownum,srcmatrix_B_colnum,res.result);
+	ShowMatrix(req.srcmatrix_A_rownum,req.srcmatrix_B_colnum,res.result);
 
   return true;
 }

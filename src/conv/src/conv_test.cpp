@@ -45,7 +45,6 @@ int main(int argc, char **argv)
 
   }
 
-  reqSw.response.result.resize(16*16);
 
   //ShowMatrix(srv.request.srcmatrix_A_rownum,srv.request.srcmatrix_A_colnum,srv.request.srcmatrix_A);
   //ShowMatrix(srv.request.srcmatrix_B_rownum,srv.request.srcmatrix_B_colnum,srv.request.srcmatrix_B);
@@ -56,6 +55,7 @@ int main(int argc, char **argv)
   int64_t timestampSw1 = time1.tv_sec * kMicroSecondsPerSecond + time1.tv_nsec/1000;
 
   bool resultSw = client.call(reqSw);
+  cout <<"resultSw: "<< resultSw << endl;
   if (resultSw)
   {
     ROS_INFO("resultSw success");
@@ -93,13 +93,14 @@ int main(int argc, char **argv)
 
   }
 
-  reqHw.response.result.resize(16*16);
-
+  
   struct timespec time3 = {0};
   clock_gettime(CLOCK_MONOTONIC, &time3);
   int64_t timestampHw1 = time3.tv_sec * kMicroSecondsPerSecond + time3.tv_nsec/1000;
 
   bool resultHw = client.call(reqHw);
+  cout <<"resultHw: "<< resultHw << endl;
+
   if (resultHw)
   {
     ROS_INFO("resultHw success");
