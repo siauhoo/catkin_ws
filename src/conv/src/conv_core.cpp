@@ -27,6 +27,7 @@ typedef uint32_t u32;
 const u32 XACC_BASE = 0x40000000;
 struct xacc {
 	volatile uint32_t* ptr;
+	volatile char* data_ptr;
 };
 
 using namespace std;
@@ -110,42 +111,58 @@ void xacc_init(struct xacc* acc) {
 	int fd = open("/dev/mem", O_RDWR | O_SYNC);
 	void* addr = mmap(0,4096,PROT_READ | PROT_WRITE,MAP_SHARED,fd,XACC_BASE);
 	acc->ptr = (volatile uint32_t*)addr;
+	acc->data_ptr = (volatile char*)addr;
+	cout<<"xacc_init: " << acc->ptr[0] << endl;
 	close(fd);
 }
 
 
-u32 XAcc_mmult_Write_A_Bytes(u32 XACC_BASE, int offset, char *data, int length) {
+u32 XAcc_mmult_Write_A_Bytes(struct xacc* acc, int offset, char *data, int length) {
 
     int i;
     if ((offset + length) > (XACC_MMULT_CONTROL_ADDR_A_HIGH - XACC_MMULT_CONTROL_ADDR_A_BASE + 1))
         return 0;
 
     for (i = 0; i < length; i++) {
-        *(char *)(XACC_BASE + XACC_MMULT_CONTROL_ADDR_A_BASE + offset + i) = *(data + i);
+        acc->data_ptr[XACC_MMULT_CONTROL_ADDR_A_BASE/16+ offset + i] = *(data + i);
     }
     return length;
 }
 
-u32 XAcc_mmult_Write_W_Bytes(u32 XACC_BASE, int offset, char *data, int length) {
+u32 XAcc_mmult_Write_W_Bytes(struct xacc* acc, int offset, char *data, int length) {
+    
+		cout<<"333--1" << endl;
+
     int i;
 
     if ((offset + length) > (XACC_MMULT_CONTROL_ADDR_W_HIGH - XACC_MMULT_CONTROL_ADDR_W_BASE + 1))
         return 0;
 
+		cout<<"333--2" << endl;
+
     for (i = 0; i < length; i++) {
-        *(char *)(XACC_BASE + XACC_MMULT_CONTROL_ADDR_W_BASE + offset + i) = *(data + i);
+
+    		cout<<"333--2-1 "<<  XACC_MMULT_CONTROL_ADDR_W_BASE + offset + i << endl;
+    		cout<<"333--2-2 "<< static_cast<int> (*(data + i)) << endl;
+    		cout<<"333--2-3 "<< acc->ptr[0] <<endl;
+    		cout<<"333--2-4 "<< acc->data_ptr[0] <<endl;
+
+        acc->data_ptr[XACC_MMULT_CONTROL_ADDR_W_BASE/16 + offset + i] = *(data + i);
     }
+
+    cout<<"333--4" << endl;
+
     return length;
 }
 
-u32 XAcc_mmult_Read_O_Bytes(u32 XACC_BASE, int offset, char *data, int length) {
+u32 XAcc_mmult_Read_O_Bytes(struct xacc* acc, int offset, char *data, int length) {
     int i;
 
     if ((offset + length) > (XACC_MMULT_CONTROL_ADDR_O_HIGH - XACC_MMULT_CONTROL_ADDR_O_BASE + 1))
         return 0;
 
     for (i = 0; i < length; i++) {
-        *(data + i) = *(char *)(XACC_BASE + XACC_MMULT_CONTROL_ADDR_O_BASE + offset + i);
+        *(data + i) = acc->data_ptr[XACC_MMULT_CONTROL_ADDR_O_BASE/16 + offset + i];
     }
     return length;
 }
@@ -158,28 +175,38 @@ u32 XAcc_mmult_Read_O_Bytes(u32 XACC_BASE, int offset, char *data, int length) {
  * */
 void xacc_comp(struct xacc* acc,conv::conv::Request&req,conv::conv::Response &res) 
 {
+	cout<<"333" << endl;
+
 
 	int W_BASE = XACC_MMULT_CONTROL_ADDR_W_BASE/4;
 	int A_BASE = XACC_MMULT_CONTROL_ADDR_A_BASE/4;
 	int ADDR_O_BASE = XACC_MMULT_CONTROL_ADDR_O_BASE/4;
 	
-	XAcc_mmult_Write_W_Bytes(XACC_BASE,0,reinterpret_cast<char*>(&req.srcmatrix_A[0]),XACC_MMULT_CONTROL_DEPTH_W);
+	XAcc_mmult_Write_W_Bytes(acc,0,reinterpret_cast<char*>(&req.srcmatrix_A[0]),XACC_MMULT_CONTROL_DEPTH_W);
 
-	XAcc_mmult_Write_A_Bytes(XACC_BASE,0,reinterpret_cast<char*>(&req.srcmatrix_B[0]),XACC_MMULT_CONTROL_DEPTH_A);
+	cout<<"444" << endl;
+
+	XAcc_mmult_Write_A_Bytes(acc,0,reinterpret_cast<char*>(&req.srcmatrix_B[0]),XACC_MMULT_CONTROL_DEPTH_A);
 	
-	acc->ptr[0] = 0x01 | (acc->ptr[0] & 0x80);
+	acc->ptr[0] = 0x01 | ((acc->ptr[0]) & 0x80);
 	while (!(acc->ptr[0] & 0x02)) {
 		usleep(50);
 	}
 
+	cout<<"555" << endl;
+
+
   res.result.resize(req.srcmatrix_A_rownum*req.srcmatrix_B_colnum);
-	XAcc_mmult_Read_O_Bytes(XACC_BASE,0,reinterpret_cast<char*>(&res.result[0]),XACC_MMULT_CONTROL_DEPTH_O);
+	XAcc_mmult_Read_O_Bytes(acc,0,reinterpret_cast<char*>(&res.result[0]),XACC_MMULT_CONTROL_DEPTH_O);
 }
 
 
 void mmul_hw(conv::conv::Request&req,conv::conv::Response &res) {
+	cout<<"111" << endl;
 	xacc acc;
 	xacc_init(&acc);
+	cout<<"222" << endl;
+
 	xacc_comp(&acc,req,res);
 }
 
