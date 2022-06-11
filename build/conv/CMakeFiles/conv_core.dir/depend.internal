@@ -6,6 +6,7 @@ conv/CMakeFiles/conv_core.dir/src/conv_core.cpp.o
  /home/siauhoo/catkin_ws/devel/include/conv/convRequest.h
  /home/siauhoo/catkin_ws/devel/include/conv/convResponse.h
  /home/siauhoo/catkin_ws/src/conv/include/conv/show.h
+ /home/siauhoo/catkin_ws/src/conv/include/conv/xacc_mmult_hw.h
  /home/siauhoo/catkin_ws/src/conv/src/conv_core.cpp
  /opt/ros/noetic/include/ros/advertise_options.h
  /opt/ros/noetic/include/ros/advertise_service_options.h

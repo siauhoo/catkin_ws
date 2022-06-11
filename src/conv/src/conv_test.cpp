@@ -29,16 +29,11 @@ int main(int argc, char **argv)
   srv.request.srcmatrix_A_rownum = 16;
   srv.request.srcmatrix_A_colnum = 16;
   srv.request.srcmatrix_A.resize(16*16);
-
   for (int i = 0; i < 16*16; ++i)
   {
       srv.request.srcmatrix_A[i]=i;
 
   }
-  
-  
-
-
   srv.request.srcmatrix_B_rownum = 16;
   srv.request.srcmatrix_B_colnum = 16;
   srv.request.srcmatrix_B.resize(16*16);
@@ -48,18 +43,16 @@ int main(int argc, char **argv)
       srv.request.srcmatrix_B[i]=1;
 
   }
-
- 
-
-  ShowMatrix(srv.request.srcmatrix_A_rownum,srv.request.srcmatrix_A_colnum,srv.request.srcmatrix_A);
-  ShowMatrix(srv.request.srcmatrix_B_rownum,srv.request.srcmatrix_B_colnum,srv.request.srcmatrix_B);
+  //ShowMatrix(srv.request.srcmatrix_A_rownum,srv.request.srcmatrix_A_colnum,srv.request.srcmatrix_A);
+  //ShowMatrix(srv.request.srcmatrix_B_rownum,srv.request.srcmatrix_B_colnum,srv.request.srcmatrix_B);
 
 
   struct timespec time1 = {0};
   clock_gettime(CLOCK_MONOTONIC, &time1);
   int64_t timestamp1 = time1.tv_sec * kMicroSecondsPerSecond + time1.tv_nsec/1000;
 
-  if (client.call(srv))
+  bool result = client.call(srv);
+  if (result)
   {
     ROS_INFO("notify taker");
   }
@@ -74,7 +67,25 @@ int main(int argc, char **argv)
 
   cout <<"soft version time: " <<  timestamp2- timestamp1<< endl; 
 
-  ShowMatrix(srv.request.srcmatrix_A_rownum,srv.request.srcmatrix_B_colnum,srv.response.result);
+
+  srv.request.version = 1;
+  result = client.call(srv);
+  if (result)
+  {
+    ROS_INFO("notify taker");
+  }
+  else
+  {
+    ROS_ERROR("Failed to call service call_back");
+  }
+
+  struct timespec time3 = {0};
+  clock_gettime(CLOCK_MONOTONIC, &time3);
+  int64_t timestamp3 = time3.tv_sec * kMicroSecondsPerSecond + time3.tv_nsec/1000;
+
+  cout <<"hardware version time: " <<  timestamp3- timestamp1<< endl; 
+
+  //ShowMatrix(srv.request.srcmatrix_A_rownum,srv.request.srcmatrix_B_colnum,srv.response.result);
 
   return 0;
 }

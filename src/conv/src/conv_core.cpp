@@ -2,8 +2,17 @@
 #include "std_msgs/String.h"
 #include "conv/conv.h"
 #include "conv/show.h"
-
-
+#include "conv/xacc_mmult_hw.h"
+#include <stdint.h>
+#include <assert.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <stddef.h>
 #include <sstream>
 #include <iostream>
 #include <string>
@@ -12,6 +21,12 @@
 typedef int int32;
 typedef int8_t int8;
 typedef uint8_t uint8;
+typedef uint32_t u32;
+
+const u32 XACC_BASE = 0x40000000;
+struct xacc {
+	volatile uint32_t* ptr;
+};
 
 using namespace std;
 
@@ -88,10 +103,7 @@ void mmul_sw(conv::conv::Request&req,conv::conv::Response &res) {
 }
 
 
-#define XACC_BASE 0x40000000
-struct xacc {
-	volatile uint32_t* ptr;
-};
+
 
 void xacc_init(struct xacc* acc) {
 	int fd = open("/dev/mem", O_RDWR | O_SYNC);
@@ -100,20 +112,76 @@ void xacc_init(struct xacc* acc) {
 	close(fd);
 }
 
-void xacc_comp(struct xacc* acc, uint32_t a, uint32_t b, uint32_t *c) 
+
+u32 XAcc_mmult_Write_A_Bytes(u32 XACC_BASE, int offset, char *data, int length) {
+
+    int i;
+    if ((offset + length) > (XACC_MMULT_CONTROL_ADDR_A_HIGH - XACC_MMULT_CONTROL_ADDR_A_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(char *)(XACC_BASE + XACC_MMULT_CONTROL_ADDR_A_BASE + offset + i) = *(data + i);
+    }
+    return length;
+}
+
+u32 XAcc_mmult_Write_W_Bytes(u32 XACC_BASE, int offset, char *data, int length) {
+    int i;
+
+    if ((offset + length) > (XACC_MMULT_CONTROL_ADDR_W_HIGH - XACC_MMULT_CONTROL_ADDR_W_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(char *)(XACC_BASE + XACC_MMULT_CONTROL_ADDR_W_BASE + offset + i) = *(data + i);
+    }
+    return length;
+}
+
+u32 XAcc_mmult_Read_O_Bytes(u32 XACC_BASE, int offset, char *data, int length) {
+    int i;
+
+    if ((offset + length) > (XACC_MMULT_CONTROL_ADDR_O_HIGH - XACC_MMULT_CONTROL_ADDR_O_BASE + 1))
+        return 0;
+
+    for (i = 0; i < length; i++) {
+        *(data + i) = *(char *)(XACC_BASE + XACC_MMULT_CONTROL_ADDR_O_BASE + offset + i);
+    }
+    return length;
+}
+
+/**
+ *input:  W int8[16*16]
+        	A uint8[16*16]
+					output: O uint8[16*16]
+```
+ * */
+void xacc_comp(struct xacc* acc,conv::conv::Request&req,conv::conv::Response &res) 
 {
-	acc->ptr[6] = a;
-	acc->ptr[8] = b;
+
+	int W_BASE = XACC_MMULT_CONTROL_ADDR_W_BASE/4;
+	int A_BASE = XACC_MMULT_CONTROL_ADDR_A_BASE/4;
+	int ADDR_O_BASE = XACC_MMULT_CONTROL_ADDR_O_BASE/4;
+	
+	XAcc_mmult_Write_W_Bytes(XACC_BASE,0,reinterpret_cast<char*>(&req.srcmatrix_A[0]),XACC_MMULT_CONTROL_DEPTH_W);
+
+	XAcc_mmult_Write_A_Bytes(XACC_BASE,0,reinterpret_cast<char*>(&req.srcmatrix_B[0]),XACC_MMULT_CONTROL_DEPTH_A);
+	
 	acc->ptr[0] = 0x01 | (acc->ptr[0] & 0x80);
 	while (!(acc->ptr[0] & 0x02)) {
 		usleep(50);
 	}
-	*c = acc->ptr[4];
+
+	int32 srcmatrix_A_rownum = req.srcmatrix_A_rownum;
+	int32 srcmatrix_B_colnum = req.srcmatrix_B_colnum;
+	res.result.resize(srcmatrix_A_rownum*srcmatrix_B_colnum);
+	XAcc_mmult_Read_O_Bytes(XACC_BASE,0,reinterpret_cast<char*>(&res.result[0]),XACC_MMULT_CONTROL_DEPTH_O);
 }
 
 
 void mmul_hw(conv::conv::Request&req,conv::conv::Response &res) {
-	cout <<"mmul_hw" << endl;
+	xacc acc;
+	xacc_init(&acc);
+	xacc_comp(&acc,req,res);
 }
 
 bool call_back(conv::conv::Request&req,conv::conv::Response &res)
@@ -125,7 +193,7 @@ bool call_back(conv::conv::Request&req,conv::conv::Response &res)
             mmul_sw(req,res);
             break;
         case 1 :
-            cout << "You entered B. \n";
+        		mmul_hw(req,res);
             break;
         default:
             cout << "unknow version!\n";
