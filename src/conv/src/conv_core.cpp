@@ -73,9 +73,6 @@ void Relu6(std::vector<int32>& src,int count, std::vector<uint8>& target) {
 		if (src[i]<=0)
 		{
 			target[i]=0;
-		} else if (src[i]>=255)
-		{
-			target[i]=255;
 		} else {
 			target[i]=int8_t(src[i]>>8);
 		}

@@ -32,7 +32,7 @@ int main(int argc, char **argv)
   
   for (int i = 0; i < 16*16; ++i)
   {
-      reqSw.request.srcmatrix_A[i]=i;
+      reqSw.request.srcmatrix_A[i]=17;
 
   }
   reqSw.request.srcmatrix_B_rownum = 16;
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 
   for (int i = 0; i < 16*16; ++i)
   {
-      reqSw.request.srcmatrix_B[i]=1;
+      reqSw.request.srcmatrix_B[i]=17;
 
   }
 
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
   
   for (int i = 0; i < 16*16; ++i)
   {
-      reqHw.request.srcmatrix_A[i]=i;
+      reqHw.request.srcmatrix_A[i]=17;
 
   }
   reqHw.request.srcmatrix_B_rownum = 16;
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
 
   for (int i = 0; i < 16*16; ++i)
   {
-      reqHw.request.srcmatrix_B[i]=1;
+      reqHw.request.srcmatrix_B[i]=17;
 
   }
 
